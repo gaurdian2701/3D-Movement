@@ -47,24 +47,38 @@ public class PlayerIKController : MonoBehaviour
 
     public void DoLeftHandGrab()
     {
-        RaycastHit hitInfo;
-        if (Physics.Raycast(leftHandBoneTransform.position, leftHandBoneTransform.forward, out hitInfo, 1f, LayerMask.GetMask(groundMask)))
+        RaycastHit hitInfo = new RaycastHit();
+        if (CheckForLeftHandGrab(ref hitInfo))
         {
             Vector3 grabPoint = hitInfo.point;
             grabPoint.z += handGrabOffset;
             SetLeftHandIKTarget(grabPoint);
         }
     }
-
     public void DoRightHandGrab()
     {
-        RaycastHit hitInfo;
-        if (Physics.Raycast(rightHandBoneTransform.position, rightHandBoneTransform.forward, out hitInfo, 1f, LayerMask.GetMask(groundMask)))
+        RaycastHit hitInfo = new RaycastHit();
+        if (CheckForRightHandGrab(ref hitInfo))
         {
             Vector3 grabPoint = hitInfo.point;
             grabPoint.z += handGrabOffset;
             SetRightHandIKTarget(grabPoint);
         }
+    }
+
+    private bool CheckForLeftHandGrab(ref RaycastHit hitInfo) =>
+        Physics.Raycast(leftHandBoneTransform.position, leftHandBoneTransform.forward, out hitInfo, 1f, LayerMask.GetMask(groundMask));
+
+    private bool CheckForRightHandGrab(ref RaycastHit hitInfo) =>
+        Physics.Raycast(rightHandBoneTransform.position, rightHandBoneTransform.forward, out hitInfo, 1f, LayerMask.GetMask(groundMask));
+
+    public bool PlayerCanShimmy(float inputData, ref RaycastHit hitInfo)
+    {
+        if (inputData < 0f)
+            return CheckForLeftHandGrab(ref hitInfo);
+
+        return CheckForRightHandGrab(ref hitInfo);
+        
     }
 
     public void SetLeftHandIKTargetToDefaultHang() => leftArmIKTarget.localPosition = defaultLeftArmIKTargetHangingPos;

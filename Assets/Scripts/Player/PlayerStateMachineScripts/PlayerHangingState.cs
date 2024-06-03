@@ -18,7 +18,7 @@ public class PlayerHangingState : IState
     private RaycastHit ledgeHitInfo;
     private const float ledgeEndCheckRaycastHorizontalOffset = 0.5f;
     private const float ledgeEndCheckRaycastVerticalOffset = 2.2f;
-    private const float defaultHangingMovementSpeedModifier = 0.38f;
+    private const float defaultHangingMovementSpeedModifier = 0.33f;
 
     public PlayerHangingState(PlayerController controller, PlayerIKController playerIKController)
     {
@@ -39,26 +39,17 @@ public class PlayerHangingState : IState
         playerIKController.ToggleRigWeight(true);
     }
 
-    //Unable to access updated transform.forward value even though TRANSFORM ITSELF IS GETTING UPDATED WTF UNITY
     public void UpdateMovement(Vector2 inputData)
     {
         float horizontalInput = Mathf.Round(inputData.x);
-        CheckForShimmy(horizontalInput);
+        bool canShimmy = playerIKController.PlayerCanShimmy(inputData.x, ref ledgeHitInfo);
         animator.SetFloat(hangSpeedParam, Mathf.Round(horizontalInput));
         Vector3 shimmyAxisVector = ledgeHitInfo.normal;
         shimmyAxisVector.Normalize();
         shimmyAxisVector = Quaternion.AngleAxis(-90f, Vector3.up) * shimmyAxisVector;
-        Vector3 hangingMovement = new Vector3(inputData.x, 0f, 0f);
-        playerTransform.position += currentHangingMovementSpeedModifier * Time.deltaTime * hangingMovement;
-    }
-
-    private void CheckForShimmy(float moveDirection)
-    {
-        ledgeEndRaycastOrigin = playerTransform.position;
-        ledgeEndRaycastOrigin.x += (ledgeEndCheckRaycastHorizontalOffset * moveDirection);
-        ledgeEndRaycastOrigin.y += ledgeEndCheckRaycastVerticalOffset;
-        currentHangingMovementSpeedModifier = Physics.Raycast(ledgeEndRaycastOrigin, playerTransform.forward, out ledgeHitInfo, 1f, LayerMask.GetMask(groundMask)) ? 
-            defaultHangingMovementSpeedModifier : 0f;
+        shimmyAxisVector.x *= Mathf.Round(inputData.x);
+        shimmyAxisVector.z *= Mathf.Round(inputData.x);
+        playerTransform.position += currentHangingMovementSpeedModifier * Time.deltaTime * shimmyAxisVector;
     }
 
     public void ExitState()
